@@ -1,0 +1,35 @@
+name: Weekly Bag Intelligence Report
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install anthropic requests
+
+      - name: Generate weekly report
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python generate_report.py
+
+      - name: Commit and push report
+        run: |
+          git config --global user.name "bag-intelligence-bot"
+          git config --global user.email "bot@bag-intelligence.com"
+          git add .
+          git diff --cached --quiet || git commit -m "Weekly report $(date +'%Y-%m-%d')"
+          git push
