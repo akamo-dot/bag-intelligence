@@ -32,4 +32,4 @@ jobs:
           git config --global user.email "bot@bag-intelligence.com"
           git add .
           git diff --cached --quiet || git commit -m "Weekly report $(date +'%Y-%m-%d')"
-          git push
+          git pull origin main --rebase && git push
