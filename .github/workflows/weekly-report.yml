@@ -31,7 +31,7 @@ jobs:
             git config --global user.name "bag-intelligence-bot"
             git config --global user.email "bot@bag-intelligence.com"
             git fetch origin main
-            git rebase origin/main
+            git merge origin/main --no-edit
             git add .
             git diff --cached --quiet || git commit -m "Weekly report $(date +'%Y-%m-%d')"
             git push origin main
