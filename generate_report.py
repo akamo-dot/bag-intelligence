@@ -6,6 +6,7 @@ Bag Intelligence Weekly Report Generator — 5カ国版（日本語UI）
 import anthropic
 import os
 import re
+import time
 from datetime import datetime, timezone, timedelta
 
 # ── 設定 ──────────────────────────────────────────────
@@ -194,13 +195,16 @@ def generate_country_section(country):
     return html
 
 
-# ── 全国セクションを生成 ────────────────────────────────
+# ── 全国セクションを生成（レート制限対策：各国間60秒待機）──
 print(f"🚀 BAG INTELLIGENCE 5カ国版 生成開始: {TODAY_JP}")
 
 country_sections = {}
-for country in COUNTRIES:
+for i, country in enumerate(COUNTRIES):
     country_sections[country["id"]] = generate_country_section(country)
     print(f"  ✅ {country['flag']} {country['name']} 完了")
+    if i < len(COUNTRIES) - 1:
+        print("  ⏳ 60秒待機中（レート制限対策）...")
+        time.sleep(60)
 
 
 # ── タブボタンとコンテンツを組み立て ──────────────────
