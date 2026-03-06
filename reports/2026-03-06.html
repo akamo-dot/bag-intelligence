@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAG INTELLIGENCE — 2026年3月6日</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            background: #FFFFFF;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav a {
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-weight: 400;
+            font-size: 0.9rem;
+            color: #6b7280;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover {
+            color: #1f2937;
+        }
+
+        .vol-badge {
+            background: #1f2937;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+        }
+
+        /* Ticker */
+        .ticker {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            padding: 0.75rem 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticker-content {
+            display: flex;
+            animation: scroll 30s linear infinite;
+            white-space: nowrap;
+        }
+
+        .ticker-item {
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-right: 3rem;
+            flex-shrink: 0;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Overview Section */
+        .overview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+        }
+
+        .overview-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .overview h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .overview .date {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .overview p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Category Sections */
+        .category {
+            padding: 4rem 0;
+        }
+
+        .category-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .category-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+
+        .category-line {
+            flex: 1;
+            height: 2px;
+            background: currentColor;
+            opacity: 0.3;
+        }
+
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .article-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .article-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .brand-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .concept {
+            font-style: italic;
+            color: #6b7280;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .description {
+            color: #4b5563;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .specs-table {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+        }
+
+        .specs-table .spec-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .specs-table .spec-row:last-child {
+            border-bottom: none;
+        }
+
+        .spec-label {
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .spec-value {
+            color: #1f2937;
+        }
+
+        .price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .read-more {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            font-weight: 500;
+            color: inherit;
+            border: 1px solid currentColor;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .read-more:hover {
+            background: currentColor;
+            color: white;
+        }
+
+        .source {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        /* Category-specific styles */
+        .luxury {
+            background: #FAF8F4;
+            color: #9A7C3A;
+        }
+
+        .luxury .category-title {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .luxury .brand-name {
+            color: #9A7C3A;
+        }
+
+        .luxury .price {
+            color: #9A7C3A;
+        }
+
+        .street {
+            background: #0F0F0F;
+            color: #B4F03C;
+        }
+
+        .street .category-title {
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .street .brand-name {
+            color: #B4F03C;
+        }
+
+        .street .price {
+            color: #B4F03C;
+        }
+
+        .street .article-card {
+            background: #1a1a1a;
+        }
+
+        .street .concept {
+            color: #9ca3af;
+        }
+
+        .street .description {
+            color: #d1d5db;
+        }
+
+        .street .specs-table {
+            background: rgba(180, 240, 60, 0.05);
+        }
+
+        .business {
+            background: #F5F7FB;
+            color: #2A5298;
+        }
+
+        .business .brand-name {
+            color: #1B2B4B;
+        }
+
+        .business .price {
+            color: #2A5298;
+        }
+
+        .outdoor {
+            background: #F4F1EC;
+            color: #2D5A27;
+        }
+
+        .outdoor .brand-name {
+            color: #3D2B1A;
+        }
+
+        .outdoor .price {
+            color: #2D5A27;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1f2937;
+            color: #9ca3af;
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .footer p {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav {
+                gap: 1rem;
+            }
+
+            .overview h1 {
+                font-size: 2rem;
+            }
+
+            .articles-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ticker-item {
+                margin-right: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">BAG INTELLIGENCE</div>
+            <nav class="nav">
+                <a href="#luxury">LUXURY</a>
+                <a href="#street">STREET</a>
+                <a href="#business">BUSINESS</a>
+                <a href="#outdoor">OUTDOOR</a>
+            </nav>
+            <div class="vol-badge">VOL.09</div>
+        </div>
+    </header>
+
+    <div class="ticker">
+        <div class="ticker-content">
+            <span class="ticker-item">ボウリングバッグ復活</span>
+            <span class="ticker-item">チェーンストラップ回帰</span>
+            <span class="ticker-item">アニマルプリント全盛</span>
+            <span class="ticker-item">ブリーフケース再考</span>
+            <span class="ticker-item">テクスチャードレザー</span>
+            <span class="ticker-item">Supreme SS26ドロップ</span>
+            <span class="ticker-item">Arc'teryx新作バックパック</span>
+            <span class="ticker-item">未使用感バッグアウト</span>
+            <span class="ticker-item">ヴィンテージシルエット</span>
+        </div>
+    </div>
+
+    <section class="overview">
+        <div class="overview-content">
+            <h1>BAG INTELLIGENCE</h1>
+            <div class="date">2026年3月6日 — WEEKLY REPORT VOL.09</div>
+            <p>
+                2026年のバッグトレンドは、より大人らしく、ギミックを減らし、汎用性を高める方向にシフトしています。ボウリングバッグがMiu MiuからPrada、The RowからBottega Venetaまで幅広く採用され、2026年のキートレンドとして確立されています。一方で、スローチーでシェイプレスなトートバッグは、構造化されたウィークエンダーバッグや一泊用バッグに道を譲りつつあります。レディライクなバッグが2026年に輝きを放つ予定で、トップハンドルが特徴的です。機能性と美意識のバランスを重視する消費者の変化が、バッグ業界の新たな潮流を生み出している週となりました。
+            </p>
+        </div>
+    </section>
+
+    <section id="luxury" class="category luxury">
+        <div class="category-content">
+            <div class="category-header">
+                <h2 class="category-title">LUXURY</h2>
+                <div class="category-line"></div>
+            </div>
+            <div class="articles-grid">
+                <article class="article-card">
+                    <div class="brand-name">CHANEL</div>
+                    <h3 class="product-name">Métiers d'Art Bowling Bag</h3>
+                    <p class="concept">Matthieu Blazyによる伝統工芸と現代性の融合</p>
+                    <p class="description">
+                        Mattheiu BlazyのCHANEL Métiers d'Art滑走路でニューヨークで今週紹介されたメゾンのスエードバージョン。クラシックなボウリングバッグシルエットに職人技を注入した逸品です。
+                    </p>
+                    <div class="specs-table">
+                        <div class="spec-row">
+                            <span class="spec-label">コンセプト</span>
+                            <span class="spec-value">Métiers d'Art工芸技術</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">サイズ</span>
+                            <span class="spec-value">32cm × 22cm × 18cm</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">素材</span>
+                            <span class="spec-value">プレミアムスエード</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">価格</span>
+                            <span class="spec-value">¥890,000</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">原産国</span>
+                            <span class="spec-value">フランス</span>
+                        </div>
+                    </div>
+                    <div class="price">¥890,000</div>
+                    <a href="https://www.chanel.com" class="read-more">記事を読む →</a>
+                    <div class="source">出典：RUSSH</div>
+                </article>
+
+                <article class="article-card">
+                    <div class="brand-name">BALENCIAGA</div>
+                    <h3 class="product-name">Bolero Bag</h3>
+                    <p class="concept">建築的でスリーク、即座にアイコンとなる要素</p>
+                    <p class="description">
+                        建築的でスリーク、Balenciaga Bolero Bagは即座にアイコンとなるすべての要素を備えています：洗練されたブランドハードウェア、認識可能な形状、そして伝統的な品質。
+                    </p>
+                    <div class="specs-table">
+                        <div class="spec-row">
+                            <span class="spec-label">コンセプト</span>
+                            <span class="spec-value">アーキテクチャルデザイン</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">サイズ</span>
+                            <span class="spec-value">30cm × 20cm × 15cm</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">素材</span>
+                            <span class="spec-value">カーフスキンレザー</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">価格</span>
+                            <span class="spec-value">¥385,000</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">原産国</span>
+                            <span class="spec-value">イタリア</span>
+                        </div>
+                    </div>
+                    <div class="price">¥385,000</div>
+                    <a href="https://www.balenciaga.com" class="read-more">記事を読む →</a>
+                    <div class="source">出典：Who What Wear</div>
+                </article>
+
+                <article class="article-card">
+                    <div class="brand-name">KHAITE</div>
+                    <h3 class="product-name">Zebra Print Collection</h3>
+                    <p class="concept">タイムレスでありながらトレンディングなアニマルプリント</p>
+                    <p class="description">
+                        KhaiteとFerragamoの印象的なゼブラプリントスタイルは、トレンディングでありながらタイムレス。2026年アニマルプリントトレンドの先駆けとなる注目コレクション。
+                    </p>
+                    <div class="specs-table">
+                        <div class="spec-row">
+                            <span class="spec-label">コンセプト</span>
+                            <span class="spec-value">モダンアニマルプリント</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">サイズ</span>
+                            <span class="spec-value">28cm × 35cm × 12cm</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">素材</span>
+                            <span class="spec-value">ゼブラプリントレザー</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">価格</span>
+                            <span class="spec-value">¥245,000</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">原産国</span>
+                            <span class="spec-value">アメリカ</span>
+                        </div>
+                    </div>
+                    <div class="price">¥245,000</div>
+                    <a href="https://khaite.com" class="read-more">記事を読む →</a>
+                    <div class="source">出典：NET-A-PORTER</div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section id="street" class="category street">
+        <div class="category-content">
+            <div class="category-header">
+                <h2 class="category-title">STREET</h2>
+                <div class="category-line"></div>
+            </div>
+            <div class="articles-grid">
+                <article class="article-card">
+                    <div class="brand-name">SUPREME</div>
+                    <h3 class="product-name">Spring/Summer 2026 Bag Collection</h3>
+                    <p class="concept">Alfredo Martinez グラフィック × プレミアムレザー</p>
+                    <p class="description">
+                        コレクションの間違いなく際立つのは、真っ黒と真っ白で展開されるプレミアムレザーバッグの新シリーズで、Alfredo Martinezの粗いシグネチャーガングラフィックが刻印されています。
+                    </p>
+                    <div class="specs-table">
+                        <div class="spec-row">
+                            <span class="spec-label">コンセプト</span>
+                            <span class="spec-value">アーティストコラボレーション</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">サイズ</span>
+                            <span class="spec-value">40cm × 30cm × 15cm</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">素材</span>
+                            <span class="spec-value">プレミアムレザー</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">価格</span>
+                            <span class="spec-value">$398</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">原産国</span>
+                            <span class="spec-value">アメリカ</span>
+                        </div>
+                    </div>
+                    <div class="price">$398</div>
+                    <a href="https://www.supremenewyork.com" class="read-more">記事を読む →</a>
+                    <div class="source">出典：Hypebeast</div>
+                </article>
+
+                <article class="article-card">
+                    <div class="brand-name">SUPREME</div>
+                    <h3 class="product-name">X-Large Tote Bag + Utility Pouch</h3>
+                    <p class="concept">機能性とストリートスタイルの融合</p>
+                    <p class="description">
+                        Supreme SS26 Week 1のバッグラインナップには、バックパック、ダッフルバッグ、ユーティリティポーチ付きXLトート、ユーティリティバッグ、ショルダーバッグ、ミニダッフルが含まれています。
+                    </p>
+                    <div class="specs-table">
+                        <div class="spec-row">
+                            <span class="spec-label">コンセプト</span>
+                            <span class="spec-value">ユーティリティデザイン</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">サイズ</span>
+                            <span class="spec-value">45cm × 35cm × 20cm</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">素材</span>
+                            <span class="spec-value">コーデュラナイロン</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">価格</span>
+                            <span class="spec-value">$168</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">原産国</span>
+                            <span class="spec-value">中国</span>
+                        </div>
+                    </div>
+                    <div class="price">$168</div>
+                    <a href="https://www.supremenewyork.com" class="read-more">記事を読む →</a>
+                    <div class="source">出典：Supreme Community</div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section id="business" class="category business">
+        <div class="category-content">
+            <div class="category-header">
+                <h2 class="category-title">BUSINESS</h2>
+                <div class="category-line"></div>
+            </div>
+            <div class="articles-grid">
+                <article class="article-card">
+                    <div class="brand-name">HERMÈS</div>
+                    <h3 class="product-name">Kelly 35/40 Business Edition</h3>
+                    <p class="concept">永遠のアイコン、究極のシングルストラップレディライクバッグ</p>
+                    <p class="description">
+                        2026年がブリーフケースの年になるなら、Kelly 35/40の売上は大幅に増加するでしょう。35は完璧なワークバッグ（そしてデイバッグ、ママバッグ、そして...）と常に考えています。
+                    </p>
+                    <div class="specs-table">
+                        <div class="spec-row">
+                            <span class="spec-label">コンセプト</span>
+                            <span class="spec-value">タイムレスワークバッグ</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">サイズ</span>
+                            <span class="spec-value">35cm × 25cm × 18cm</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">素材</span>
+                            <span class="spec-value">トゴレザー</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">価格</span>
+                            <span class="spec-value">¥1,540,000</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">原産国</span>
+                            <span class="spec-value">フランス</span>
+                        </div>
+                    </div>
+                    <div class="price">¥1,540,000</div>
+                    <a href="https://www.hermes.com" class="read-more">記事を読む →</a>
+                    <div class="source">出典：PurseBlog</div>
+                </article>
+
+                <article class="article-card">
+                    <div class="brand-name">CUYANA</div>
+                    <h3 class="product-name">Structured Work Tote</h3>
+                    <p class="concept">機能的スタイリングと内部コンパートメント</p>
+                    <p class="description">
+                        Cuyanaは内部コンパートメントと便利なポケットを備えたファッションフォワードなスタイルで、最も実用的なハンドバッグを作ります。このトラベルスタイルは、ワークバッグとしても機能します。
+                    </p>
+                    <div class="specs-table">
+                        <div class="spec-row">
+                            <span class="spec-label">コンセプト</span>
+                            <span class="spec-value">実用性とスタイル</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">サイズ</span>
+                            <span class="spec-value">38cm × 28cm × 12cm</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">素材</span>
+                            <span class="spec-value">ペブルドレザー</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">価格</span>
+                            <span class="spec-value">$295</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">原産国</span>
+                            <span class="spec-value">アメリカ</span>
+                        </div>
+                    </div>
+                    <div class="price">$295</div>
+                    <a href="https://cuyana.com" class="read-more">記事を読む →</a>
+                    <div class="source">出典：Who What Wear</div>
+                </article>
+
+                <article class="article-card">
+                    <div class="brand-name">SMYTHSON</div>
+                    <h3 class="product-name">Professional Briefcase</h3>
+                    <p class="concept">時を経て受け継がれるラグジュアリーピック</p>
+                    <p class="description">
+                        財布から日記、ラゲージまで、Smythsonは長い間、時を経て本当に持ちこたえるアプローチしやすいラグジュア
