@@ -21,14 +21,17 @@ jobs:
 
       - name: Generate report with Claude
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # ここをシークレット名「BAG」に合わせて修正しました
+          ANTHROPIC_API_KEY: ${{ secrets.BAG }}
         run: |
           python - << 'PYTHON_SCRIPT'
           import os, time
           from anthropic import Anthropic
           
-          client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-          # Tier 1で最も安定している Sonnet 3.5 を指定
+          # 環境変数からAPIキーを取得
+          api_key = os.environ.get("ANTHROPIC_API_KEY")
+          client = Anthropic(api_key=api_key)
+          
           MODEL = "claude-3-5-sonnet-20241022"
           countries = ["France", "USA", "Japan", "Italy", "UK"]
           report = ""
@@ -43,14 +46,14 @@ jobs:
                       max_tokens=800,
                       messages=[{"role": "user", "content": f"Trend bags in {c} 2026. HTML div only."}]
                   )
-                  report += f"<h2>{c}</h2>{res.content[0].text}"
+                  report += f"<div style='margin-bottom:20px;'><h2>{c}</h2>{res.content[0].text}</div>"
                   print(f"✅ {c} OK")
                   time.sleep(2)
               except Exception as e:
                   print(f"❌ {c} Fail: {e}")
           
           with open("index.html", "w", encoding="utf-8") as f:
-              f.write(f"<html><body><h1>Weekly Report</h1>{report}</body></html>")
+              f.write(f"<html><body style='font-family:sans-serif;padding:40px;'><h1>Weekly Bag Report</h1>{report}</body></html>")
           PYTHON_SCRIPT
 
       - name: Commit and Push
@@ -58,5 +61,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "github-actions[bot]"
           git add index.html
-          git commit -m "Update Report" || echo "No changes"
+          git commit -m "Update Report using BAG secret" || echo "No changes"
           git push
