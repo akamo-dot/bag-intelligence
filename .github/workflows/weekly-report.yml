@@ -1,16 +1,14 @@
-name: Weekly Bag Intelligence Report
-
+name: Global Bag Trend Report
 on:
   schedule:
-    - cron: '0 0 * * 1'
-  workflow_dispatch:
+    - cron: '0 0 * * 1' # 毎週月曜 9:00 JST
+  workflow_dispatch:   # 手動実行用
 
 jobs:
-  generate-report:
+  build-and-report:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,47 +16,76 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install anthropic
+        run: |
+          pip install anthropic
 
-      - name: Generate report
+      - name: Generate report with Claude
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          python -c '
-          import os, anthropic
-          from datetime import datetime
-          try:
-              client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-              today = datetime.now().strftime("%Y-%m-%d")
-              print(f"Generating for {today}...")
-              
-              resp = client.messages.create(
-                  model="claude-3-5-sonnet-20240620",
-                  max_tokens=1000,
-                  messages=[{"role": "user", "content": "2026年のバッグトレンドを3行で教えて"}]
-              )
-              content = resp.content[0].text
-              
-              os.makedirs("reports", exist_ok=True)
-              with open(f"reports/{today}.html", "w") as f:
-                  f.write(f"<html><body><h1>{today} Report</h1><p>{content}</p></body></html>")
-              with open("index.html", "w") as f:
-                  f.write(f"<html><body><h1>Archive</h1><a href=\"reports/{today}.html\">{today}</a></body></html>")
-              print("✅ Success")
-          except Exception as e:
-              print(f"❌ Error: {e}")
-              exit(1)
-          '
+          python - << 'EOF'
+          import os
+          import time
+          from anthropic import Anthropic
 
-      - name: Commit and push
+          client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+          countries = ["France", "USA", "Japan", "Italy", "UK"]
+          report_content = ""
+
+          print("🚀 Starting AI Trend Research...")
+
+          for country in countries:
+              print(f"--- Investigating {country} ---")
+              try:
+                  # Rate Limit対策としてweb_searchは使わず、最新知識に基づいた分析を依頼
+                  # (必要に応じてツール使用プロンプトに変更可能)
+                  response = client.messages.create(
+                      model="claude-3-5-sonnet-20240620",
+                      max_tokens=1000,
+                      messages=[{
+                          "role": "user", 
+                          "content": f"Analyze the current top 3 bag trends in {country} for this week. Return only HTML format (div tags)."
+                      }]
+                  )
+                  report_content += f"<h2>{country} Trend</h2>" + response.content[0].text
+                  print(f"✅ {country} Success")
+                  
+                  # 429エラー回避のための待機
+                  time.sleep(10) 
+              except Exception as e:
+                  print(f"❌ Error in {country}: {e}")
+
+          # HTMLの組み立て
+          full_html = f"""
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <style>
+                  body {{ font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; background: #f9f9f9; }}
+                  h2 {{ color: #333; border-bottom: 2px solid #333; }}
+              </style>
+          </head>
+          <body>
+              <h1>Weekly Global Bag Trends</h1>
+              {report_content}
+              <p>Updated at: {time.strftime('%Y-%m-%d %H:%M:%S')}</p>
+          </body>
+          </html>
+          """
+
+          with open("index.html", "w") as f:
+              f.write(full_html)
+          print("✨ index.html has been generated.")
+          EOF
+
+      - name: Commit and Push
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          if ! git diff --cached --quiet; then
-            git commit -m "Weekly report update"
-            git push origin main
-          fi
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add index.html
+          git commit -m "Update Weekly Report: $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push
