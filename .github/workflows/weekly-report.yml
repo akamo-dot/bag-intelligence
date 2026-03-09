@@ -30,8 +30,8 @@ jobs:
           from anthropic import Anthropic
 
           client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-          # 404を回避するため、最も軽量で新しいHaikuモデルを指定
-          MODEL_NAME = "claude-3-5-haiku-20241022"
+          # Tier 1で確実に動作する最新のSonnetモデルを指定
+          MODEL_NAME = "claude-3-5-sonnet-20241022"
           countries = ["France", "USA", "Japan", "Italy", "UK"]
           report_content = ""
 
@@ -45,11 +45,12 @@ jobs:
                       max_tokens=1000,
                       messages=[{
                           "role": "user", 
-                          "content": f"Analyze the current top 3 bag trends in {country}. Return only HTML format (div tags)."
+                          "content": f"Analyze the current top 3 bag trends in {country} for this week. Return only HTML format (div tags) with a stylish design."
                       }]
                   )
-                  report_content += f"<section style='margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:20px;'><h2>{country} Trend</h2>" + response.content[0].text + "</section>"
+                  report_content += f"<section style='margin-bottom:40px; border-bottom:1px solid #ddd; padding-bottom:20px;'><h2>{country} Trend</h2>" + response.content[0].text + "</section>"
                   print(f"✅ {country} Success")
+                  # レート制限を考慮し、リクエスト間に少し待機
                   time.sleep(5) 
               except Exception as e:
                   print(f"❌ Error in {country}: {e}")
@@ -59,17 +60,19 @@ jobs:
           <html lang="ja">
           <head>
               <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>Weekly Bag Intelligence Report</title>
               <style>
-                  body {{ font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; max-width: 900px; margin: auto; padding: 40px; color: #333; background-color: #fff; }}
-                  h1 {{ text-align: center; border-bottom: 3px solid #000; padding-bottom: 10px; }}
-                  h2 {{ color: #d4af37; border-left: 5px solid #d4af37; padding-left: 15px; }}
-                  section {{ margin-top: 30px; }}
+                  body {{ font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 40px; color: #333; background-color: #fff; }}
+                  h1 {{ text-align: center; border-bottom: 3px solid #000; padding-bottom: 20px; letter-spacing: 2px; text-transform: uppercase; }}
+                  h2 {{ color: #d4af37; border-left: 5px solid #d4af37; padding-left: 15px; margin-top: 40px; }}
+                  p {{ margin-bottom: 15px; }}
+                  .meta {{ text-align: right; color: #777; font-size: 0.9em; }}
               </style>
           </head>
           <body>
-              <h1>Weekly Bag Intelligence Report</h1>
-              <p style="text-align:right;">Updated: {time.strftime('%Y-%m-%d')}</p>
+              <h1>Weekly Bag Intelligence</h1>
+              <p class="meta">Last Updated: {time.strftime('%Y-%m-%d %H:%M:%S')}</p>
               {report_content}
           </body>
           </html>
@@ -77,12 +80,3 @@ jobs:
 
           with open("index.html", "w", encoding="utf-8") as f:
               f.write(full_html)
-          print("✨ index.html has been generated.")
-          EOF
-
-      - name: Commit and Push
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "github-actions[bot]"
-          git add index.html
-          git commit -m "Update Report with Haiku model"
