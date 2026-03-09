@@ -21,39 +21,60 @@ jobs:
 
       - name: Generate report with Claude
         env:
-          # ここをシークレット名「BAG」に合わせて修正しました
+          # ここをあなたの設定「BAG」に確実に合わせました
           ANTHROPIC_API_KEY: ${{ secrets.BAG }}
         run: |
           python - << 'PYTHON_SCRIPT'
           import os, time
           from anthropic import Anthropic
           
-          # 環境変数からAPIキーを取得
           api_key = os.environ.get("ANTHROPIC_API_KEY")
           client = Anthropic(api_key=api_key)
           
+          # モデル名も最も確実なものに固定
           MODEL = "claude-3-5-sonnet-20241022"
           countries = ["France", "USA", "Japan", "Italy", "UK"]
           report = ""
           
-          print(f"🚀 Research Start: {MODEL}")
+          print(f"🚀 Research Start using BAG secret...")
           
           for c in countries:
-              print(f"--- {c} ---")
+              print(f"--- Investigating {c} ---")
               try:
                   res = client.messages.create(
                       model=MODEL,
-                      max_tokens=800,
-                      messages=[{"role": "user", "content": f"Trend bags in {c} 2026. HTML div only."}]
+                      max_tokens=1000,
+                      messages=[{"role": "user", "content": f"Analyze the current top 3 bag trends in {c} for 2026. Return only HTML format (div tags) with a stylish design."}]
                   )
-                  report += f"<div style='margin-bottom:20px;'><h2>{c}</h2>{res.content[0].text}</div>"
-                  print(f"✅ {c} OK")
+                  report += f"<section style='margin-bottom:40px; border-bottom:1px solid #ddd; padding-bottom:20px;'><h2>{c} Trend</h2>{res.content[0].text}</section>"
+                  print(f"✅ {c} Success")
                   time.sleep(2)
               except Exception as e:
                   print(f"❌ {c} Fail: {e}")
           
+          full_html = f"""
+          <!DOCTYPE html>
+          <html lang="ja">
+          <head>
+              <meta charset="UTF-8">
+              <title>Weekly Bag Intelligence Report</title>
+              <style>
+                  body {{ font-family: sans-serif; max-width: 800px; margin: auto; padding: 40px; line-height: 1.6; }}
+                  h1 {{ border-bottom: 3px solid #000; padding-bottom: 10px; text-align: center; }}
+                  h2 {{ color: #d4af37; }}
+              </style>
+          </head>
+          <body>
+              <h1>Weekly Bag Intelligence</h1>
+              <p style='text-align:right;'>Updated: {time.strftime('%Y-%m-%d')}</p>
+              {report}
+          </body>
+          </html>
+          """
+          
           with open("index.html", "w", encoding="utf-8") as f:
-              f.write(f"<html><body style='font-family:sans-serif;padding:40px;'><h1>Weekly Bag Report</h1>{report}</body></html>")
+              f.write(full_html)
+          print("✨ index.html generated.")
           PYTHON_SCRIPT
 
       - name: Commit and Push
