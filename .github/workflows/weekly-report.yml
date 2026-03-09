@@ -1,120 +1,36 @@
-"""
-Bag Intelligence Weekly Report Generator — 5カ国版
-APIレート制限（429 Error）対策 & デザイン維持版
-"""
+name: Weekly Bag Intelligence Report
 
-import anthropic
-import os
-import re
-import time
-from datetime import datetime, timezone, timedelta
+on:
+  schedule:
+    - cron: '0 0 * * 1' # 毎週月曜日に自動実行
+  workflow_dispatch:      # 手動実行ボタンを表示
 
-# ── 設定 ──────────────────────────────────────────────
-JST = timezone(timedelta(hours=9))
-TODAY = datetime.now(JST).strftime("%Y-%m-%d")
-TODAY_JP = datetime.now(JST).strftime("%Y年%-m月%-d日")
-WEEKNUM = datetime.now(JST).strftime("VOL.%U")
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write    # ファイルを書き込む権限
 
-OUTPUT_DIR = "reports"
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-client = anthropic.Anthropic()
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-# ── 5カ国の設定 ────────────────────────────────────────
-COUNTRIES = [
-    {"id": "japan", "flag": "🇯🇵", "name": "日本", "queries": {"LUXURY": "バッグ 新作 ラグジュアリー 2026", "STREET": "ストリート バッグ 新作 ドロップ 2026", "BUSINESS": "ビジネスバッグ 新作 2026", "OUTDOOR": "アウトドア バックパック 新作 2026", "SPECIAL": "アニメ コスプレ キャラクター バッグ 新作 2026"}},
-    {"id": "usa", "flag": "🇺🇸", "name": "アメリカ", "queries": {"LUXURY": "luxury handbag new collection 2026", "STREET": "streetwear bag new drop 2026 hypebeast", "BUSINESS": "business briefcase bag new release 2026", "OUTDOOR": "outdoor backpack new release 2026", "SPECIAL": "novelty cosplay anime convention bag USA 2026"}},
-    {"id": "europe", "flag": "🇪🇺", "name": "ヨーロッパ", "queries": {"LUXURY": "European luxury bag new 2026 fashion week", "STREET": "European streetwear bag drop 2026", "BUSINESS": "European leather business bag new 2026", "OUTDOOR": "European outdoor hiking bag new 2026", "SPECIAL": "Europe art designer unusual novelty bag 2026"}},
-    {"id": "korea", "flag": "🇰🇷", "name": "韓国", "queries": {"LUXURY": "명품 가방 신상 2026", "STREET": "스트리트 가방 신상 드롭 2026", "BUSINESS": "비즈니스 백 신상 2026", "OUTDOOR": "아웃도어 백팩 신상 2026", "SPECIAL": "캐릭터 가방 덕후 코스프レ 신상 2026"}},
-    {"id": "china", "flag": "🇨🇳", "name": "中国", "queries": {"LUXURY": "奢侈品 包包 新款 2026", "STREET": "潮流 包包 新品 2026", "BUSINESS": "商务包 新款 2026", "OUTDOOR": "户外背包 新款 2026", "SPECIAL": "动漫 二次元 周边 包包 新款 2026"}},
-]
+      - name: Install dependencies
+        run: pip install anthropic requests
 
-CAT_LABEL = {"LUXURY": "ラグジュアリー", "STREET": "ストリート", "BUSINESS": "ビジネス", "OUTDOOR": "アウトドア", "SPECIAL": "スペシャル"}
+      - name: Generate weekly report
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python generate_report.py
 
-def generate_country_section(country, max_retries=3):
-    cid, flag, name = country["id"], country["flag"], country["name"]
-    search_list = "\n".join([f'- {CAT_LABEL[cat]}: "{q}"' for cat, q in country["queries"].items()])
-    prompt = f"{flag} {name}のバッグトレンドレポートを生成してください。\n\n## 検索クエリ\n{search_list}\n\n## 出力形式\n各カテゴリ2件の記事をHTML形式で作成。画像・記事URLは実在するものを使用。説明は日本語。今日: {TODAY_JP}"
-
-    for attempt in range(max_retries):
-        try:
-            print(f"  🔍 {flag} {name} 調査中... ({attempt+1}/{max_retries})")
-            response = client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=4500,
-                tools=[{"type": "web_search_20250305", "name": "web_search"}],
-                messages=[{"role": "user", "content": prompt}]
-            )
-            html = "".join([b.text for b in response.content if b.type == "text"])
-            return re.sub(r'^```html\s*|\s*```$', '', html.strip())
-        except anthropic.RateLimitError:
-            wait = 150 * (attempt + 1)
-            print(f"  ⚠️ 制限検知。{wait}秒待機...")
-            time.sleep(wait)
-        except Exception as e:
-            print(f"  ❌ エラー: {e}")
-            time.sleep(60)
-    return f'<p>⚠️ {name}のデータ取得失敗</p>'
-
-# ── 生成メインループ ──────────────────────────────────
-print(f"🚀 生成開始: {TODAY_JP}")
-country_sections = {}
-for i, country in enumerate(COUNTRIES):
-    country_sections[country["id"]] = generate_country_section(country)
-    print(f"  ✅ {country['name']} 完了")
-    if i < len(COUNTRIES) - 1:
-        print("  ⏳ 150秒待機（レート制限対策）...")
-        time.sleep(150)
-
-# ── HTML組み立て（元のデザインを維持） ────────────────
-tab_buttons = "".join([f'<button class="tab-btn {"active" if i==0 else ""}" onclick="switchTab(\'{c["id"]}\')" id="btn-{c["id"]}"><span class="tab-flag">{c["flag"]}</span><span class="tab-name">{c["name"]}</span></button>' for i, c in enumerate(COUNTRIES)])
-tab_contents = "".join([f'<div class="tab-pane {"active" if i==0 else ""}" id="pane-{c["id"]}"><div class="country-header"><span class="country-flag-lg">{c["flag"]}</span><h2 class="country-title">{c["name"]}のトレンド</h2><span class="country-date">{TODAY_JP}</span></div>{country_sections[c["id"]]}</div>' for i, c in enumerate(COUNTRIES)])
-
-full_html = f'''<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<title>BAG INTELLIGENCE — {TODAY_JP}</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Space+Mono&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-<style>
-body{{background:#0D0D12;color:#E8E4DC;font-family:'Noto Sans JP',sans-serif;margin:0;}}
-.site-header{{position:sticky;top:0;z-index:100;background:#0D0D12cc;backdrop-filter:blur(12px);border-bottom:1px solid #222;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;}}
-.logo{{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;}}
-.logo span{{color:#C8A84B;}}
-.tabs{{display:flex;padding:0 32px;border-bottom:1px solid #1e1e1e;overflow-x:auto;}}
-.tab-btn{{padding:16px 28px;background:transparent;border:none;border-bottom:2px solid transparent;color:#555;cursor:pointer;display:flex;align-items:center;gap:8px;}}
-.tab-btn.active{{color:#C8A84B;border-bottom-color:#C8A84B;}}
-.tab-pane{{display:none;padding:40px 32px;max-width:1200px;margin:0 auto;}}
-.tab-pane.active{{display:block;}}
-.country-header{{display:flex;align-items:center;gap:16px;margin-bottom:28px;border-bottom:1px solid #222;padding-bottom:24px;}}
-/* カードなどの詳細CSSは元ファイルを継承 */
-.category{{margin-bottom:60px;}}
-.cards{{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}}
-.card{{background:#131318;border:1px solid #1e1e1e;padding:20px;}}
-.product{{font-size:16px;font-weight:700;margin:10px 0;}}
-.read-btn{{color:#C8A84B;text-decoration:none;font-size:12px;}}
-</style>
-</head>
-<body>
-<header class="site-header"><div class="logo">BAG <span>INTELLIGENCE</span></div><div>{TODAY_JP}</div></header>
-<nav class="tabs">{tab_buttons}</nav>
-<main>{tab_contents}</main>
-<script>
-function switchTab(id) {{
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('pane-' + id).classList.add('active');
-  document.getElementById('btn-' + id).classList.add('active');
-}}
-</script>
-</body>
-</html>'''
-
-with open(f"{OUTPUT_DIR}/{TODAY}.html", "w", encoding="utf-8") as f: f.write(full_html)
-
-# ── index.html 更新 ──────────────────────────────────
-existing_reports = sorted([f for f in os.listdir(OUTPUT_DIR) if f.endswith(".html") and f != "index.html"], reverse=True)
-items = "".join([f'<a href="reports/{f}" style="color:#fff;display:block;padding:10px 0;border-bottom:1px solid #222;text-decoration:none;">{f.replace(".html","")}号 →</a>' for f in existing_reports])
-index_content = f'<html><body style="background:#111;color:#fff;padding:50px;font-family:sans-serif;"><h1>Archive</h1>{items}</body></html>'
-with open("index.html", "w", encoding="utf-8") as f: f.write(index_content)
-print("🎉 完了")
+      - name: Commit and push report
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Weekly report $(date +'%Y-%m-%d')" && git push)
