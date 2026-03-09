@@ -30,20 +30,22 @@ jobs:
           from anthropic import Anthropic
 
           client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+          # 確実に存在するモデル名に変更
+          MODEL_NAME = "claude-3-sonnet-20240229"
           countries = ["France", "USA", "Japan", "Italy", "UK"]
           report_content = ""
 
-          print("🚀 Starting AI Trend Research...")
+          print(f"🚀 Starting AI Trend Research using {MODEL_NAME}...")
 
           for country in countries:
               print(f"--- Investigating {country} ---")
               try:
                   response = client.messages.create(
-                      model="claude-3-5-sonnet-latest",
+                      model=MODEL_NAME,
                       max_tokens=1000,
                       messages=[{
                           "role": "user", 
-                          "content": f"Analyze the current top 3 bag trends in {country} for this week. Return only HTML format (div tags)."
+                          "content": f"Analyze the current top 3 bag trends in {country}. Return only HTML format (div tags)."
                       }]
                   )
                   report_content += f"<section><h2>{country} Trend</h2>" + response.content[0].text + "</section>"
@@ -64,5 +66,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add index.html
-          git commit -m "Update Report with latest model" || echo "No changes"
+          git commit -m "Fix model name to stable version" || echo "No changes"
           git push
