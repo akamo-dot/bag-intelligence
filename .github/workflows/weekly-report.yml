@@ -21,50 +21,49 @@ jobs:
 
       - name: Generate report with Claude
         env:
-          # 名前が「Bag」でも「BAG」でも、どちらか入っている方を採用します
-          KEY_V1: ${{ secrets.Bag }}
-          KEY_V2: ${{ secrets.BAG }}
+          # GitHubが自動で大文字にした「BAG」を確実に読み込みます
+          CLAUDE_SECRET: ${{ secrets.BAG }}
         run: |
           python - << 'PYTHON_SCRIPT'
-          import os, time
+          import os, time, sys
           from anthropic import Anthropic
           
-          # 登録されている可能性のあるすべての名前をチェック
-          api_key = os.environ.get("KEY_V1") or os.environ.get("KEY_V2")
+          # 環境変数からキーを取得（名前が何であれ環境変数経由で渡されます）
+          api_key = os.environ.get("CLAUDE_SECRET")
           
-          if not api_key:
-              print("❌ Error: GitHub Secret 'Bag' or 'BAG' not found.")
-              exit(1)
+          if not api_key or not api_key.startswith("sk-ant"):
+              print("❌ ERROR: GitHub Secret 'BAG' is missing or invalid.")
+              sys.exit(1)
               
           client = Anthropic(api_key=api_key)
           MODEL = "claude-3-5-sonnet-20241022"
           countries = ["France", "USA", "Japan", "Italy", "UK"]
-          report = ""
+          report_content = ""
           
-          print(f"🚀 Starting Research with validated key...")
+          print(f"🚀 Key recognized as BAG. Starting research with {MODEL}...")
           
-          for c in countries:
-              print(f"--- {c} ---")
+          for country in countries:
+              print(f"--- Investigating {country} ---")
               try:
-                  res = client.messages.create(
+                  response = client.messages.create(
                       model=MODEL,
                       max_tokens=1000,
-                      messages=[{"role": "user", "content": f"Analyze 3 bag trends in {c} for 2026. HTML div tags only."}]
+                      messages=[{"role": "user", "content": f"Analyze current 3 bag trends in {country} for 2026. HTML div tags only."}]
                   )
-                  report += f"<section><h2>{c}</h2>{res.content[0].text}</section>"
-                  print(f"✅ {c} Success")
+                  report_content += f"<section style='margin-bottom:30px;'><h2>{country}</h2>{response.content[0].text}</section>"
+                  print(f"✅ {country} Success")
                   time.sleep(2)
               except Exception as e:
-                  print(f"❌ {c} Fail: {e}")
+                  print(f"❌ {country} Fail: {e}")
           
-          if not report:
-              print("Critical Error: AI generation failed.")
-              exit(1)
+          if not report_content:
+              print("❌ Critical: No content generated.")
+              sys.exit(1)
               
-          full_html = f"<html><body style='font-family:sans-serif;padding:40px;'><h1>Weekly Bag Report</h1>{report}</body></html>"
+          full_html = f"<html><body style='font-family:sans-serif;padding:40px;'><h1>Weekly Bag Report</h1>{report_content}</body></html>"
           with open("index.html", "w", encoding="utf-8") as f:
               f.write(full_html)
-          print("✨ index.html generated!")
+          print("✨ Done.")
           PYTHON_SCRIPT
 
       - name: Commit and Push
@@ -72,5 +71,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "github-actions[bot]"
           git add index.html
-          git commit -m "Fixing secret name sensitivity" || echo "No changes"
+          git commit -m "Update Report" || echo "No changes"
           git push
