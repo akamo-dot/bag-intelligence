@@ -21,49 +21,47 @@ jobs:
 
       - name: Generate report with Claude
         env:
-          # GitHubが自動で大文字にした「BAG」を確実に読み込みます
-          CLAUDE_SECRET: ${{ secrets.BAG }}
+          # GitHubが強制大文字にした「BAG」を正確に読み込み
+          CLAUDE_KEY: ${{ secrets.BAG }}
         run: |
           python - << 'PYTHON_SCRIPT'
           import os, time, sys
           from anthropic import Anthropic
           
-          # 環境変数からキーを取得（名前が何であれ環境変数経由で渡されます）
-          api_key = os.environ.get("CLAUDE_SECRET")
-          
-          if not api_key or not api_key.startswith("sk-ant"):
-              print("❌ ERROR: GitHub Secret 'BAG' is missing or invalid.")
-              sys.exit(1)
-              
+          api_key = os.environ.get("CLAUDE_KEY")
           client = Anthropic(api_key=api_key)
-          MODEL = "claude-3-5-sonnet-20241022"
+          
+          # 【重要】最も汎用的なモデル名に変更し、404を回避します
+          MODEL = "claude-3-5-sonnet-latest"
+          
           countries = ["France", "USA", "Japan", "Italy", "UK"]
           report_content = ""
           
-          print(f"🚀 Key recognized as BAG. Starting research with {MODEL}...")
+          print(f"🚀 Final Attempt with {MODEL}...")
           
           for country in countries:
               print(f"--- Investigating {country} ---")
               try:
+                  # メッセージを極限まで短くして、まず疎通を確認
                   response = client.messages.create(
                       model=MODEL,
-                      max_tokens=1000,
-                      messages=[{"role": "user", "content": f"Analyze current 3 bag trends in {country} for 2026. HTML div tags only."}]
+                      max_tokens=500,
+                      messages=[{"role": "user", "content": f"3 bag trends in {country} 2026. HTML only."}]
                   )
-                  report_content += f"<section style='margin-bottom:30px;'><h2>{country}</h2>{response.content[0].text}</section>"
+                  report_content += f"<h2>{country}</h2>{response.content[0].text}"
                   print(f"✅ {country} Success")
                   time.sleep(2)
               except Exception as e:
-                  print(f"❌ {country} Fail: {e}")
+                  print(f"❌ {country} Fail. Detail: {e}")
           
           if not report_content:
-              print("❌ Critical: No content generated.")
+              print("!!! TOTAL FAILURE !!!")
+              print("💡 対策: もしこれが404なら、Anthropic側でTier 1の反映に数時間かかっています。")
+              print("💡 または、APIキーを一度消して、再度『別の名前』で作ってみてください。")
               sys.exit(1)
               
-          full_html = f"<html><body style='font-family:sans-serif;padding:40px;'><h1>Weekly Bag Report</h1>{report_content}</body></html>"
           with open("index.html", "w", encoding="utf-8") as f:
-              f.write(full_html)
-          print("✨ Done.")
+              f.write(f"<html><body>{report_content}</body></html>")
           PYTHON_SCRIPT
 
       - name: Commit and Push
@@ -71,5 +69,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "github-actions[bot]"
           git add index.html
-          git commit -m "Update Report" || echo "No changes"
+          git commit -m "Ultra stable model check" || echo "No changes"
           git push
