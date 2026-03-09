@@ -14,8 +14,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,19 +21,44 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install anthropic requests
+        run: pip install anthropic
 
-      - name: Generate weekly report
+      - name: Generate report
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python generate_report.py
+        run: |
+          python -c '
+          import os, anthropic
+          from datetime import datetime
+          try:
+              client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+              today = datetime.now().strftime("%Y-%m-%d")
+              print(f"Generating for {today}...")
+              
+              resp = client.messages.create(
+                  model="claude-3-5-sonnet-20240620",
+                  max_tokens=1000,
+                  messages=[{"role": "user", "content": "2026年のバッグトレンドを3行で教えて"}]
+              )
+              content = resp.content[0].text
+              
+              os.makedirs("reports", exist_ok=True)
+              with open(f"reports/{today}.html", "w") as f:
+                  f.write(f"<html><body><h1>{today} Report</h1><p>{content}</p></body></html>")
+              with open("index.html", "w") as f:
+                  f.write(f"<html><body><h1>Archive</h1><a href=\"reports/{today}.html\">{today}</a></body></html>")
+              print("✅ Success")
+          except Exception as e:
+              print(f"❌ Error: {e}")
+              exit(1)
+          '
 
-      - name: Commit and push report
+      - name: Commit and push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           if ! git diff --cached --quiet; then
-            git commit -m "Weekly report $(date +'%Y-%m-%d')"
+            git commit -m "Weekly report update"
             git push origin main
           fi
