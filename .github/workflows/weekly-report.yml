@@ -1,11 +1,9 @@
 name: Global Bag Trend Report
 on:
-  schedule:
-    - cron: '0 0 * * 1' # 毎週月曜 9:00 JST
-  workflow_dispatch:   # 手動実行用
+  workflow_dispatch:   # 手動実行ボタンを出します
 
 jobs:
-  build-and-report:
+  generate-report:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -16,7 +14,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -40,8 +38,7 @@ jobs:
           for country in countries:
               print(f"--- Investigating {country} ---")
               try:
-                  # Rate Limit対策としてweb_searchは使わず、最新知識に基づいた分析を依頼
-                  # (必要に応じてツール使用プロンプトに変更可能)
+                  # まずはツールなしの通常リクエストで疎通確認
                   response = client.messages.create(
                       model="claude-3-5-sonnet-20240620",
                       max_tokens=1000,
@@ -50,32 +47,13 @@ jobs:
                           "content": f"Analyze the current top 3 bag trends in {country} for this week. Return only HTML format (div tags)."
                       }]
                   )
-                  report_content += f"<h2>{country} Trend</h2>" + response.content[0].text
+                  report_content += f"<section><h2>{country} Trend</h2>" + response.content[0].text + "</section>"
                   print(f"✅ {country} Success")
-                  
-                  # 429エラー回避のための待機
-                  time.sleep(10) 
+                  time.sleep(5) # 連続リクエストによる429回避
               except Exception as e:
                   print(f"❌ Error in {country}: {e}")
 
-          # HTMLの組み立て
-          full_html = f"""
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-              <meta charset="UTF-8">
-              <style>
-                  body {{ font-family: sans-serif; line-height: 1.6; max-width: 800px; margin: auto; padding: 20px; background: #f9f9f9; }}
-                  h2 {{ color: #333; border-bottom: 2px solid #333; }}
-              </style>
-          </head>
-          <body>
-              <h1>Weekly Global Bag Trends</h1>
-              {report_content}
-              <p>Updated at: {time.strftime('%Y-%m-%d %H:%M:%S')}</p>
-          </body>
-          </html>
-          """
+          full_html = f"<html><body style='font-family:sans-serif; padding:40px;'><h1>Weekly Bag Report</h1>{report_content}</body></html>"
 
           with open("index.html", "w") as f:
               f.write(full_html)
@@ -87,5 +65,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add index.html
-          git commit -m "Update Weekly Report: $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git commit -m "Update Report" || echo "No changes"
           git push
