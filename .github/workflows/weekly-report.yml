@@ -21,14 +21,14 @@ jobs:
 
       - name: Generate report with Claude
         env:
-          # 余計なスペースや括弧を排除した正確な記述です
+          # 余計なスペースや括弧を完全に排除した「正解」の記述です
           NEW_KEY: ${{ secrets.BAG }}
         run: |
           python - << 'PYTHON_SCRIPT'
           import os, time
           from anthropic import Anthropic
           
-          # 環境変数 NEW_KEY から正確に取得します
+          # 環境変数から正確にキーを取得
           api_key = os.environ.get("NEW_KEY")
           client = Anthropic(api_key=api_key)
           
@@ -36,27 +36,30 @@ jobs:
           countries = ["France", "USA", "Japan", "Italy", "UK"]
           report = ""
           
-          print(f"🚀 Research Start using BAG secret...")
+          print(f"🚀 Attempting Research with BAG secret...")
           
           for c in countries:
-              print(f"--- Investigating {c} ---")
+              print(f"--- {c} ---")
               try:
                   res = client.messages.create(
                       model=MODEL,
                       max_tokens=1000,
-                      messages=[{"role": "user", "content": f"Analyze the current top 3 bag trends in {c} for 2026. Return only HTML format (div tags) with a stylish design."}]
+                      messages=[{"role": "user", "content": f"Analyze top 3 bag trends in {c} for 2026. HTML div tags only."}]
                   )
-                  report += f"<section style='margin-bottom:40px; border-bottom:1px solid #ddd; padding-bottom:20px;'><h2>{c} Trend</h2>{res.content[0].text}</section>"
+                  report += f"<div style='margin-bottom:30px;'><h2>{c}</h2>{res.content[0].text}</div>"
                   print(f"✅ {c} Success")
                   time.sleep(2)
               except Exception as e:
+                  # エラーが出た場合、詳細な理由をログに残します
                   print(f"❌ {c} Fail: {e}")
           
+          if not report:
+              raise Exception("AIによるレポート生成がすべて失敗しました。APIキーを確認してください。")
+              
           full_html = f"<html><body style='font-family:sans-serif;padding:40px;'><h1>Weekly Bag Report</h1>{report}</body></html>"
-          
           with open("index.html", "w", encoding="utf-8") as f:
               f.write(full_html)
-          print("✨ index.html generated.")
+          print("✨ index.html generated successfully.")
           PYTHON_SCRIPT
 
       - name: Commit and Push
@@ -64,5 +67,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "github-actions[bot]"
           git add index.html
-          git commit -m "Final fix for API key syntax" || echo "No changes"
+          git commit -m "Fixing API key interpolation" || echo "No changes"
           git push
