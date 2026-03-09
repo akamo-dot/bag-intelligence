@@ -1,26 +1,4 @@
-name: Global Bag Trend Report
-on:
-  workflow_dispatch:   # 手動実行ボタンを出します
-
-jobs:
-  generate-report:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install anthropic
-
-      - name: Generate report with Claude
+- name: Generate report with Claude
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
@@ -38,9 +16,9 @@ jobs:
           for country in countries:
               print(f"--- Investigating {country} ---")
               try:
-                  # まずはツールなしの通常リクエストで疎通確認
+                  # モデル名を 'latest' に修正
                   response = client.messages.create(
-                      model="claude-3-5-sonnet-20240620",
+                      model="claude-3-5-sonnet-latest",
                       max_tokens=1000,
                       messages=[{
                           "role": "user", 
@@ -49,7 +27,7 @@ jobs:
                   )
                   report_content += f"<section><h2>{country} Trend</h2>" + response.content[0].text + "</section>"
                   print(f"✅ {country} Success")
-                  time.sleep(5) # 連続リクエストによる429回避
+                  time.sleep(5) 
               except Exception as e:
                   print(f"❌ Error in {country}: {e}")
 
@@ -59,11 +37,3 @@ jobs:
               f.write(full_html)
           print("✨ index.html has been generated.")
           EOF
-
-      - name: Commit and Push
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add index.html
-          git commit -m "Update Report" || echo "No changes"
-          git push
